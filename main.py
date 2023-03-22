@@ -41,6 +41,7 @@ MAIN_MENU = 0
 INSTRUCTION = 1
 PLAY = 2
 END = 3
+NAME_MENU = 4
 MENU = 0
 
 play_check = 0 
@@ -54,6 +55,10 @@ end_option = 0
 current_guess = []  # list of letters that make up the current guess
 current_guess_string = ""   # string format that makes up current guess
 current_letter_bg_x = 110   # initialize current letter position
+
+username = []
+username_string = ""
+current_letter_username_x = 110
 
 game_result = ""    # initialize game without result
 current_guess_max_letters = 3
@@ -88,6 +93,7 @@ arrow_surface = MENU_FONT.render(">", 1, "black")
 ending_surface = MENU_FONT.render("WELL DONE!", 1, "black")
 return_surface = BODY_FONT.render("Click Escape to leave, or R to return to menu,", 1, "black")
 return1_surface = BODY_FONT.render("and play again", 1, "black")
+name_surface = BODY_FONT.render("Enter a name: ", 1, "black")
 
 #set music
 UI_SOUND = mixer.Sound("assets/uiSE.wav")
@@ -140,7 +146,9 @@ def end_menu():
      if end_option == 1:
           end_option = 0
           play_again()
-
+def name_menu():
+     WIN.blit(name_surface, ((WIDTH - name_surface.get_width())/2, 5))
+     # if return key pressed
 
 # Letter class
 class Letter:
@@ -175,22 +183,16 @@ class Letter:
 
 # play again dialogue after certain time
 def play_again():
-    global MAIN_MENU, INSTRUCTION, PLAY, MENU, play_check, main_menu_check
+    global MAIN_MENU, INSTRUCTION, PLAY, MENU, play_check, main_menu_check, NAME_MENU
     # Puts the play again text on the screen.
     pygame.draw.rect(WIN, "white", (10, 600, 1000, 600))
     WIN.fill("white")
-    play_again_font = pygame.font.Font("assets/FreeSansBold.otf", 40)
-    play_again_text = play_again_font.render("Press ENTER to Play Again!", True, "black")
-    play_again_rect = play_again_text.get_rect(center=(WIDTH/2, 700))
-    word_was_text = play_again_font.render(f"The word was TARUN!", True, "black")
-    word_was_rect = word_was_text.get_rect(center=(WIDTH/2, 650))
-    WIN.blit(play_again_text, play_again_rect)
-    WIN.blit(play_again_text, play_again_rect)
     MAIN_MENU = 0
     INSTRUCTION = 1
     PLAY = 2
+    NAME_MENU = 4
     MENU = 0
-    level = 1
+    
     
     play_check = 0 
     main_menu_check = 0
@@ -199,7 +201,7 @@ def play_again():
 # resets window and game state
 def reset():
     # Resets all global variables to their default states.
-    global current_guess, current_guess_string, game_result, user_correct_words, user_score, current_letter_bg_x, user_guessed_words_y, current_guess_max_letters
+    global current_guess, current_guess_string, game_result, user_correct_words, user_score, current_letter_bg_x, user_guessed_words_y, current_guess_max_letters, level
     WIN.fill("white")
     WIN.blit(BACKGROUND, BACKGROUND_RECT)
     current_guess = []
@@ -212,28 +214,43 @@ def reset():
     current_letter_bg_x = 110
     user_guessed_words_y = 15
     current_guess_max_letters = 3
+    level = 1
     pygame.display.update()
 
 # create new letter on screen
 def create_new_letter():
-    global current_guess_string, current_letter_bg_x
-    if len(current_guess) >= current_guess_max_letters:
-            pass
+    global current_guess_string, current_letter_bg_x, username_string, current_letter_username_x, username
+    if MENU == NAME_MENU:
+        username_string += key_pressed
+        new_letter = Letter(key_pressed, (current_letter_username_x, LETTER_Y_SPACING))
+        current_letter_username_x += LETTER_X_SPACING
+        username.append(new_letter)
+        for letter in username:
+             letter.draw()
     else:
-        current_guess_string += key_pressed
-        new_letter = Letter(key_pressed, (current_letter_bg_x, LETTER_Y_SPACING))
-        current_letter_bg_x += LETTER_X_SPACING
-        current_guess.append(new_letter)
-        for letter in current_guess:    
-            letter.draw()
+        if len(current_guess) >= current_guess_max_letters:
+            pass
+        else:
+            current_guess_string += key_pressed
+            new_letter = Letter(key_pressed, (current_letter_bg_x, LETTER_Y_SPACING))
+            current_letter_bg_x += LETTER_X_SPACING
+            current_guess.append(new_letter)
+            for letter in current_guess:    
+                letter.draw()
 
 # delete letter from screen
 def delete_letter():
-    global current_guess_string, current_letter_bg_x
-    current_guess[-1].delete()
-    current_guess_string = current_guess_string[:-1]
-    current_guess.pop()
-    current_letter_bg_x -= LETTER_X_SPACING
+    global current_guess_string, current_letter_bg_x, current_letter_username_x, username_string, username
+    if NAME_MENU == MENU:
+         username[-1].delete()
+         username_string = username_string[:-1]
+         username.pop()
+         current_letter_username_x-=LETTER_X_SPACING
+    else:
+        current_guess[-1].delete()
+        current_guess_string = current_guess_string[:-1]
+        current_guess.pop()
+        current_letter_bg_x -= LETTER_X_SPACING
 
 # draw window class
 
@@ -276,6 +293,8 @@ def draw_window():
          main_menu()
      elif MENU == END:
           end_menu()
+     elif MENU == NAME_MENU:
+          name_menu()
      pygame.display.update()
 
 # main class
@@ -329,10 +348,14 @@ while run:
             #print(seconds)
 
         if seconds>=30:
+            if level == 2:
+                LEVEL_UP_SOUND.play()
             level = 3
             
             current_guess_max_letters = 5
         elif seconds>=15:
+            if level == 1:
+                LEVEL_UP_SOUND.play()
             level = 2
             
             current_guess_max_letters = 4
@@ -376,14 +399,14 @@ while run:
                     main_menu_check = 2
                 UI_SOUND.play()
             if event.key == pygame.K_RETURN: # select option
-                if main_menu_check == 0:
-                     MENU = 2
-                     play_check = 1
-                     draw_window
-                if main_menu_check == 1:
+                if main_menu_check == 0: # play
+                     MENU = 4
+                     WIN.fill("white")
+                     draw_window()
+                if main_menu_check == 1: # instructions
                     MENU = 1
                     draw_window()
-                if main_menu_check == 2:
+                if main_menu_check == 2: # quit
                     run = False
                     pygame.quit()
                     sys.exit()
@@ -442,12 +465,29 @@ while run:
                 if key_pressed in "QWERTYUIOPASDFGHJKLZXCVBNM" and key_pressed != "" and key_pressed in possible_letters:
                     if len(current_guess_string) < 5 and key_pressed not in current_guess_string:
                         create_new_letter()
+    
+      if MENU == NAME_MENU:
+           # if return key pressed
+           if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                MENU = 2
+                play_check = 1
+                
+            # if backspace key pressed
+            elif event.key == pygame.K_BACKSPACE:
+                if len(username_string) > 0 and len(username_string) >= 1:
+                    delete_letter()                
             
+            # if alphabetic key pressed
+            else:
+                key_pressed = event.unicode.upper()
+                if key_pressed in "QWERTYUIOPASDFGHJKLZXCVBNM" and key_pressed != "":
+                    create_new_letter()
       if MENU == END:
              if event.type == pygame.KEYDOWN:
                   if event.key == pygame.K_r:
                        UI_SOUND.play()
-                       end_option = 1    
+                       end_option = 1
     draw_window()
     
 
