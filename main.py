@@ -5,6 +5,7 @@ import random
 import time
 from pygame import mixer
 from anagrams import wordlist
+import csv
 
 # References: https://www.youtube.com/watch?v=mJ2hPj3kURg, https://github.com/baraltech/Wordle-PyGame/blob/main/youtubemain.py
 
@@ -301,6 +302,12 @@ while run:
             for letter in possible_letters_objects:
                 letter.delete()
             MENU = 3
+
+            with open("leaderboard.csv", "w") as f:
+                writer = csv.writer(f)
+                print(["Player 1", user_score])
+                # write a row to the csv file
+                writer.writerow(["Player 1", user_score])
         
         if abs(seconds - int(seconds)) < 0.12 and MENU != END:
             pygame.draw.rect(WIN, "white",(800, 0, 500, 80))
