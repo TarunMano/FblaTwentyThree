@@ -6,6 +6,7 @@ import time
 from pygame import mixer
 from anagrams import wordlist
 import csv
+from leaderboard import leaderboard
 
 # References: https://www.youtube.com/watch?v=mJ2hPj3kURg, https://github.com/baraltech/Wordle-PyGame/blob/main/youtubemain.py
 
@@ -42,6 +43,7 @@ INSTRUCTION = 1
 PLAY = 2
 END = 3
 NAME_MENU = 4
+LEADERBOARD_MENU = 5
 MENU = 0
 
 play_check = 0 
@@ -81,6 +83,7 @@ TITLE_FONT = pygame.font.SysFont('comicsans', 75)
 BODY_FONT = pygame.font.SysFont('comicsans', 35)
 
 WORDS_FONT = pygame.font.Font("assets/FreeSansBold.otf", 15) #30?
+LEADERBOARD_FONT = pygame.font.Font("assets/FreeSansBold.otf", 25) #30?
 
 LEVEL_FONT = pygame.font.SysFont('comicsans', 50)
 
@@ -93,7 +96,9 @@ arrow_surface = MENU_FONT.render(">", 1, "black")
 ending_surface = MENU_FONT.render("WELL DONE!", 1, "black")
 return_surface = BODY_FONT.render("Click Escape to leave, or R to return to menu,", 1, "black")
 return1_surface = BODY_FONT.render("and play again", 1, "black")
-name_surface = BODY_FONT.render("Enter a name: ", 1, "black")
+name_surface = MENU_FONT.render("Enter a name: ", 1, "black")
+leaderboard_surface = MENU_FONT.render("LEADERBOARD", 1, "black")
+leaderboard1_surface = BODY_FONT.render("Click Space to return to menu", 1, "black")
 
 #set music
 UI_SOUND = mixer.Sound("assets/uiSE.wav")
@@ -108,17 +113,21 @@ def main_menu():
     WIN.fill("white")
 
     WIN.blit(title_surface, ((WIDTH -  title_surface.get_width())/2, 5)) 
-    WIN.blit(play_surface, ((WIDTH -  play_surface.get_width())/2 , 160)) 
-    WIN.blit(instructions_surface, ((WIDTH -  instructions_surface.get_width())/2 , 210)) 
-    WIN.blit(quit_surface, ((WIDTH -  quit_surface.get_width())/2 , 260)) 
+    WIN.blit(play_surface, ((WIDTH -  play_surface.get_width())/2 , 150)) 
+    WIN.blit(instructions_surface, ((WIDTH -  instructions_surface.get_width())/2 , 210))
+    WIN.blit(leaderboard_surface, ((WIDTH - leaderboard_surface.get_width())/2, 270)) 
+    WIN.blit(quit_surface, ((WIDTH -  quit_surface.get_width())/2 , 350)) 
 
     # draw option chooser
+    if main_menu_check == 0: 
+                    WIN.blit(arrow_surface, (((WIDTH -  play_surface.get_width())/2)-20, 150))
     if main_menu_check == 1:
                     WIN.blit(arrow_surface, (((WIDTH -  instructions_surface.get_width())/2)-20, 210))
+    if main_menu_check == 3:
+                    WIN.blit(arrow_surface, (((WIDTH -  quit_surface.get_width())/2)-20, 350))
     if main_menu_check == 2:
-                    WIN.blit(arrow_surface, (((WIDTH -  quit_surface.get_width())/2)-20, 260))
-    if main_menu_check == 0: 
-                    WIN.blit(arrow_surface, (((WIDTH -  play_surface.get_width())/2)-20, 160))
+                    WIN.blit(arrow_surface,(((WIDTH - leaderboard_surface.get_width())/2)-20, 270))
+    
 
 # draw instruction menu
 def instruction_menu():
@@ -148,7 +157,22 @@ def end_menu():
           play_again()
 def name_menu():
      WIN.blit(name_surface, ((WIDTH - name_surface.get_width())/2, 5))
-     # if return key pressed
+
+def leaderboard_menu():
+    global leaderboard
+    WIN.fill("white")
+    WIN.blit(leaderboard_surface, ((WIDTH - leaderboard_surface.get_width())/2,5))
+    WIN.blit(leaderboard1_surface, ((WIDTH- leaderboard1_surface.get_width())/2, 350))
+    leaderboard.sort(key=lambda x:x[1])
+    leaderboard.reverse()
+    leaderboard = leaderboard[:5]
+    current_y = 100
+    for person in leaderboard:
+        text = LEADERBOARD_FONT.render(str(person[0] + " - " + str(person[1])), True, (0, 0, 0))
+        text_rect = text.get_rect(center = (450, current_y))
+        current_y+=25
+        WIN.blit(text, text_rect)
+
 
 # Letter class
 class Letter:
@@ -295,6 +319,8 @@ def draw_window():
           end_menu()
      elif MENU == NAME_MENU:
           name_menu()
+     elif MENU == LEADERBOARD_MENU:
+          leaderboard_menu()
      pygame.display.update()
 
 # main class
@@ -320,13 +346,14 @@ while run:
             game_result = "L"
             for letter in possible_letters_objects:
                 letter.delete()
-            MENU = 3
+            
+            if(MENU != 3):
+                with open("leaderboard.py", "w") as f:
+                    leaderboard.append([username_string, user_score])
+                    print("leaderboard = ".join(str(leaderboard)))
+                    f.write("leaderboard = ".join(str(leaderboard)))
 
-            with open("leaderboard.csv", "w") as f:
-                writer = csv.writer(f)
-                print(["Player 1", user_score])
-                # write a row to the csv file
-                writer.writerow(["Player 1", user_score])
+            MENU = 3
         
         if abs(seconds - int(seconds)) < 0.12 and MENU != END:
             pygame.draw.rect(WIN, "white",(800, 0, 500, 80))
@@ -388,16 +415,16 @@ while run:
             if event.key == pygame.K_DOWN: # move down
                 
                 main_menu_check += 1
-                if main_menu_check == 3:
+                if main_menu_check == 4:
                     main_menu_check = 0
                 UI_SOUND.play()
                     
-                
             if event.key == pygame.K_UP: # move up
                 main_menu_check -= 1
                 if main_menu_check == -1:
-                    main_menu_check = 2
+                    main_menu_check = 3
                 UI_SOUND.play()
+
             if event.key == pygame.K_RETURN: # select option
                 if main_menu_check == 0: # play
                      MENU = 4
@@ -406,7 +433,10 @@ while run:
                 if main_menu_check == 1: # instructions
                     MENU = 1
                     draw_window()
-                if main_menu_check == 2: # quit
+                if main_menu_check == 2: # leaderboard
+                     MENU = 5
+                     draw_window()
+                if main_menu_check == 3: # quit
                     run = False
                     pygame.quit()
                     sys.exit()
@@ -465,7 +495,12 @@ while run:
                 if key_pressed in "QWERTYUIOPASDFGHJKLZXCVBNM" and key_pressed != "" and key_pressed in possible_letters:
                     if len(current_guess_string) < 5 and key_pressed not in current_guess_string:
                         create_new_letter()
-    
+      if MENU == LEADERBOARD_MENU:
+           if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                     main_menu_check = 0
+                     UI_SOUND.play()
+                     MENU = MAIN_MENU
       if MENU == NAME_MENU:
            # if return key pressed
            if event.type == pygame.KEYDOWN:
