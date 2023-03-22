@@ -87,6 +87,18 @@ def instruction_menu():
     WIN.fill("white")
     WIN.blit(INSTRUCTION_IMAGE, ((WIDTH - INSTRUCTION_IMAGE.get_width())/2, (HEIGHT - INSTRUCTION_IMAGE.get_height())/2))
 
+# draw icons and start game
+def start_game():
+    WIN.fill("white")
+    # set background sprite & icon
+    BACKGROUND = pygame.image.load("assets/Starting Tiles.png")
+    BACKGROUND_RECT = BACKGROUND.get_rect(center=(317,300))
+    ICON = pygame.image.load("assets/Icon.png")
+    pygame.display.set_icon(ICON)
+    WIN.blit(BACKGROUND, BACKGROUND_RECT)
+    # initialize game
+    initalize_clock()
+    initialize_possible_letters()
 
 # Letter class
 class Letter:
@@ -209,10 +221,7 @@ def initialize_possible_letters():
 #initialize_possible_letters()
 
 def draw_window():
-     if MENU == PLAY:
-         
-         pass
-     elif MENU == INSTRUCTION:
+     if MENU == INSTRUCTION:
          instruction_menu()
      elif MENU == MAIN_MENU:
          main_menu()
@@ -221,21 +230,11 @@ def draw_window():
 # main class
 run = True
 while run:
-    # start gane
-    if play_check == 1:
-         
-        WIN.fill("white")
-        # set background sprite & icon
-        BACKGROUND = pygame.image.load("assets/Starting Tiles.png")
-        BACKGROUND_RECT = BACKGROUND.get_rect(center=(317,300))
-        ICON = pygame.image.load("assets/Icon.png")
-        pygame.display.set_icon(ICON)
-        WIN.blit(BACKGROUND, BACKGROUND_RECT)
-        # initialize game
-        initalize_clock()
-        initialize_possible_letters()
-
+    # start game
+    if play_check == 1:       
+        start_game()
         play_check = 2
+
         # run game 
     if play_check == 2:
         clock.tick(FPS)
