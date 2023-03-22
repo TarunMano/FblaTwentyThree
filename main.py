@@ -4,11 +4,12 @@ import sys
 import random
 import time
 from pygame import mixer
+from anagrams import wordlist
 
 # References: https://www.youtube.com/watch?v=mJ2hPj3kURg, https://github.com/baraltech/Wordle-PyGame/blob/main/youtubemain.py
 
 # check if given word is real
-with open("assets/words_alpha.txt") as word_file:
+with open("FblaTwentyThree/assets/words_alpha.txt") as word_file:
     english_words = set(word.strip().lower() for word in word_file)
 def is_english_word(word):
     return word.lower() in english_words
@@ -23,10 +24,10 @@ WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("FBLA 2023")
 
 # set instruction image
-INSTRUCTION_IMAGE = pygame.transform.scale(pygame.image.load("assets/Instructions Image.png"), (900,500))
-BACKGROUND = pygame.image.load("assets/Starting Tiles.png")
+INSTRUCTION_IMAGE = pygame.transform.scale(pygame.image.load("FblaTwentyThree/assets/Instructions Image.png"), (900,500))
+BACKGROUND = pygame.image.load("FblaTwentyThree/assets/Starting Tiles.png")
 BACKGROUND_RECT = BACKGROUND.get_rect(center=(317,300))
-ICON = pygame.image.load("assets/Icon.png")
+ICON = pygame.image.load("FblaTwentyThree/assets/Icon.png")
 
 
 WIN.fill("white")
@@ -47,6 +48,7 @@ current_guess_string = ""   # string format that makes up current guess
 current_letter_bg_x = 110   # initialize current letter position
 
 game_result = ""    # initialize game without result
+current_guess_max_letters = 3
 
 user_correct_words = []     # list of correct words user has entered
 user_score = 0      # score of user
@@ -56,11 +58,16 @@ LETTER_X_SPACING = 85
 LETTER_Y_SPACING = 265
 LETTER_SIZE = 75
 
+user_guessed_words_y = 15
+
 # set fonts
-GUESSED_LETTER_FONT = pygame.font.Font("assets/FreeSansBold.otf", 50)
-AVAILABLE_LETTER_FONT = pygame.font.Font("assets/FreeSansBold.otf", 25)
+GUESSED_LETTER_FONT = pygame.font.Font("FblaTwentyThree/assets/FreeSansBold.otf", 50)
+AVAILABLE_LETTER_FONT = pygame.font.Font("FblaTwentyThree/assets/FreeSansBold.otf", 25)
 MAIN_MENU_FONT = pygame.font.SysFont('comicsans', 50)
 TITLE_FONT = pygame.font.SysFont('comicsans', 75)
+
+WORDS_FONT = pygame.font.Font("FblaTwentyThree/assets/FreeSansBold.otf", 15)
+
 
 # main menu text
 title_surface = TITLE_FONT.render("ANAGRAMS", 1, "black")
@@ -70,8 +77,8 @@ quit_surface = MAIN_MENU_FONT.render("QUIT", 1, "black")
 arrow_surface = MAIN_MENU_FONT.render(">", 1, "black")
 
 #set music
-UI_SOUND = mixer.Sound("assets/uiSE.wav")
-MUSIC = mixer.music.load("assets/Background Music.wav")
+UI_SOUND = mixer.Sound("FblaTwentyThree/assets/uiSE.wav")
+MUSIC = mixer.music.load("FblaTwentyThree/assets/Background Music.wav")
 mixer.music.play(-1)
 
 # draw main menu
@@ -132,25 +139,38 @@ class Letter:
         pygame.draw.rect(WIN, "white", self.bg_rect)
         pygame.draw.rect(WIN, "#d3d6da", self.bg_rect, 3)
         pygame.display.update()
+    
+    def drawRed(self):
+        pygame.draw.rect(WIN, "red", self.bg_rect)
+        pygame.draw.rect(WIN, "#878a8c", self.bg_rect, 3)
+        pygame.display.update()
 
 # play again dialogue after certain time
 def play_again():
+    global MAIN_MENU, INSTRUCTION, PLAY, MENU, play_check, main_menu_check
     # Puts the play again text on the screen.
     pygame.draw.rect(WIN, "white", (10, 600, 1000, 600))
     WIN.fill("white")
-    play_again_font = pygame.font.Font("assets/FreeSansBold.otf", 40)
+    play_again_font = pygame.font.Font("FblaTwentyThree/assets/FreeSansBold.otf", 40)
     play_again_text = play_again_font.render("Press ENTER to Play Again!", True, "black")
     play_again_rect = play_again_text.get_rect(center=(WIDTH/2, 700))
     word_was_text = play_again_font.render(f"The word was TARUN!", True, "black")
     word_was_rect = word_was_text.get_rect(center=(WIDTH/2, 650))
     WIN.blit(play_again_text, play_again_rect)
     WIN.blit(play_again_text, play_again_rect)
+    MAIN_MENU = 0
+    INSTRUCTION = 1
+    PLAY = 2
+    MENU = 0
+    
+    play_check = 0 
+    main_menu_check = 0
     pygame.display.update()
 
 # resets window and game state
 def reset():
     # Resets all global variables to their default states.
-    global current_guess, current_guess_string, game_result, user_correct_words, user_score, current_letter_bg_x
+    global current_guess, current_guess_string, game_result, user_correct_words, user_score, current_letter_bg_x, user_guessed_words_y, current_guess_max_letters
     WIN.fill("white")
     WIN.blit(BACKGROUND, BACKGROUND_RECT)
     current_guess = []
@@ -161,18 +181,22 @@ def reset():
     initalize_clock()
     initialize_possible_letters()
     current_letter_bg_x = 110
-    
+    user_guessed_words_y = 15
+    current_guess_max_letters = 3
     pygame.display.update()
 
 # create new letter on screen
 def create_new_letter():
     global current_guess_string, current_letter_bg_x
-    current_guess_string += key_pressed
-    new_letter = Letter(key_pressed, (current_letter_bg_x, LETTER_Y_SPACING))
-    current_letter_bg_x += LETTER_X_SPACING
-    current_guess.append(new_letter)
-    for letter in current_guess:
-        letter.draw()
+    if len(current_guess) >= current_guess_max_letters:
+            pass
+    else:
+        current_guess_string += key_pressed
+        new_letter = Letter(key_pressed, (current_letter_bg_x, LETTER_Y_SPACING))
+        current_letter_bg_x += LETTER_X_SPACING
+        current_guess.append(new_letter)
+        for letter in current_guess:    
+            letter.draw()
 
 # delete letter from screen
 def delete_letter():
@@ -196,24 +220,16 @@ def initalize_clock():
 # initialize possible letters that user can use on a given round
 def initialize_possible_letters():
     global possible_letters, possible_letters_objects
-    # identify consonants/vowels
-    consonant = ['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z']
-    vowels = ['A', 'E', 'I', 'O', 'U']
     possible_letters = []
 
-    # retrieves three random consonants
-    for i in range(3):
-        index = random.randint(0, 20)
-        while(consonant[index] in possible_letters):
-            index = random.randint(0, 20)
-        possible_letters.append(consonant[index])
+    word_index = random.randint(0, len(wordlist)-1)
+    word = wordlist[word_index]
+    
+    for char in range(0, len(word)):
+        possible_letters.append(word[char].upper())
 
-    # retrieves two random vowels
-    for i in range(2):
-        index = random.randint(0, 4)
-        while(vowels[index] in possible_letters):
-            index = random.randint(0, 4)
-        possible_letters.append(vowels[index])
+    random.shuffle(possible_letters)
+    print(possible_letters)
 
     # show possible letters on screen
     possible_letters_x = current_letter_bg_x
@@ -250,14 +266,34 @@ while run:
         if game_result != "":
          play_again()
 
-        if seconds >= 5 and game_result == "":    # end game timer
-         current_guess = []
-         current_guess_string = ""
-         current_letter_bg_x = 110
-         game_result = "L"
-         for letter in possible_letters_objects:
-             letter.delete()
-         play_again()
+        if seconds >= 45 and game_result == "":    # end game timer
+            current_guess = []
+            current_guess_string = ""
+            current_letter_bg_x = 110
+            game_result = "L"
+            for letter in possible_letters_objects:
+                letter.delete()
+            play_again()
+        
+        if abs(seconds - int(seconds)) < 0.12:
+            pygame.draw.rect(WIN, "white",(800, 0, 500, 80))
+            text = GUESSED_LETTER_FONT.render(str(int(seconds)), True, (0, 128, 0))
+            text_rect = text.get_rect(center = (850, 50))
+            WIN.blit(text, text_rect)
+            pygame.display.flip()
+        else:
+            pass
+            #print(seconds)
+
+        if seconds>=30:
+            current_guess_max_letters = 5
+        elif seconds>=15:
+            current_guess_max_letters = 4
+        else:
+            pass
+
+
+        
 
     # on event
     
@@ -325,11 +361,21 @@ while run:
                     reset()
                 else:
                     # if valid word
-                    if len(current_guess_string) <= 5 and is_english_word(current_guess_string.lower()) and current_guess_string not in user_correct_words:
+                    if len(current_guess_string) <= current_guess_max_letters and is_english_word(current_guess_string.lower()) and current_guess_string not in user_correct_words:
                         user_correct_words.append(current_guess_string)
-                        user_score+=100
+                        user_score+=(100 + (len(current_guess_string) - 3)*100)
                         print(user_correct_words)
                         print(user_score)
+
+                        text = WORDS_FONT.render(current_guess_string, True, (51, 51, 0))
+                        text_rect = text.get_rect(center = (600, user_guessed_words_y))
+                        WIN.blit(text, text_rect)
+                        user_guessed_words_y+=15
+
+                        pygame.draw.rect(WIN, "white",(700, 400, 700, 500))
+                        text = GUESSED_LETTER_FONT.render(str(user_score), True, (0, 128, 0))
+                        text_rect = text.get_rect(center = (825, 450))
+                        WIN.blit(text, text_rect)
 
                         # clear screen
                         for i in range(len(current_guess_string)):
@@ -349,6 +395,7 @@ while run:
             
             
     draw_window()
+    
 
 pygame.quit() 
 
