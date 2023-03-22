@@ -3,6 +3,7 @@ import os
 import sys
 import random
 import time
+from pygame import mixer
 
 # References: https://www.youtube.com/watch?v=mJ2hPj3kURg, https://github.com/baraltech/Wordle-PyGame/blob/main/youtubemain.py
 
@@ -23,6 +24,9 @@ pygame.display.set_caption("FBLA 2023")
 
 # set instruction image
 INSTRUCTION_IMAGE = pygame.transform.scale(pygame.image.load("assets/Instructions Image.png"), (900,500))
+BACKGROUND = pygame.image.load("assets/Starting Tiles.png")
+BACKGROUND_RECT = BACKGROUND.get_rect(center=(317,300))
+ICON = pygame.image.load("assets/Icon.png")
 
 
 WIN.fill("white")
@@ -65,6 +69,11 @@ instructions_surface = MAIN_MENU_FONT.render("INSTRUCTIONS", 1, "black")
 quit_surface = MAIN_MENU_FONT.render("QUIT", 1, "black") 
 arrow_surface = MAIN_MENU_FONT.render(">", 1, "black")
 
+#set music
+UI_SOUND = mixer.Sound("assets/uiSE.wav")
+MUSIC = mixer.music.load("assets/Background Music.wav")
+mixer.music.play(-1)
+
 # draw main menu
 def main_menu():
     WIN.fill("white")
@@ -91,9 +100,7 @@ def instruction_menu():
 def start_game():
     WIN.fill("white")
     # set background sprite & icon
-    BACKGROUND = pygame.image.load("assets/Starting Tiles.png")
-    BACKGROUND_RECT = BACKGROUND.get_rect(center=(317,300))
-    ICON = pygame.image.load("assets/Icon.png")
+    
     pygame.display.set_icon(ICON)
     WIN.blit(BACKGROUND, BACKGROUND_RECT)
     # initialize game
@@ -277,12 +284,14 @@ while run:
                 main_menu_check += 1
                 if main_menu_check == 3:
                     main_menu_check = 0
+                UI_SOUND.play()
                     
                 
             if event.key == pygame.K_UP: # move up
                 main_menu_check -= 1
                 if main_menu_check == -1:
                     main_menu_check = 2
+                UI_SOUND.play()
             if event.key == pygame.K_RETURN: # select option
                 if main_menu_check == 0:
                      MENU = 2
@@ -295,11 +304,13 @@ while run:
                     run = False
                     pygame.quit()
                     sys.exit()
+                UI_SOUND.play()
       # while in instruction menu
       if MENU == INSTRUCTION:
           if event.type == pygame.KEYDOWN:
               if event.key == pygame.K_r:
                   main_menu_check = 0
+                  UI_SOUND.play()
                   MENU = MAIN_MENU
         # while playing game
       if MENU == PLAY:
