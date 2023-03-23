@@ -1,7 +1,1 @@
-leaderboard = [
-    ["Tarun", 1200],
-    ["Adi", 1000],
-    ["Kevin", 10000],
-    ["Tanish", 350],
-    ["Ojas", 300]
-]
+leaderboard = [['ADI', 1600], ['TARUN', 1500], ['KEVIN', 2200], ['EDGAR', 1900], ['TARUN', 1800], ['TARUN', 2000], ['JOE', 2100], ['MATT', 600]]
